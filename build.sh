@@ -12,9 +12,16 @@ if [ ! -d ${RELEASE_DIR} ]; then
 	exit 1
 fi
 
+DOCKERFILE_BUILD=Dockerfile.build
+
 # Chargement de la conf
 . ${RELEASE_DIR}/config.docker
 
-docker build --rm -f Dockerfile --tag "${VENDOR}/${IMAGE}:${TAG}" .
+sed "s/#FROM_PHP#/${DOCKERFILE_FROM_PHP}/g; s/#PHP_RELEASE#/${DOCKERFILE_PHP_RELEASE}/g" Dockerfile.template >${DOCKERFILE_BUILD}
 
+docker build --rm -f ${DOCKERFILE_BUILD} --tag "${VENDOR}/${IMAGE}:${TAG}" .
+
+if [ $? -eq 0 ]; then
+	rm ${DOCKERFILE_BUILD}
+fi
 exit $?

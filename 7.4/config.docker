@@ -1,0 +1,6 @@
+FROM_PHP=php:7.4-fpm-bullseye
+PHP_RELEASE=7.4
+VENDOR=wyzenrepo
+IMAGE=php-nginx
+TAG=7.4
+SHELL=sh

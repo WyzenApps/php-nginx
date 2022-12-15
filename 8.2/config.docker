@@ -1,0 +1,6 @@
+FROM_PHP=php:8.2-fpm-bullseye
+PHP_RELEASE=8.2
+VENDOR=wyzenrepo
+IMAGE=php-nginx
+TAG=$PHP_RELEASE
+SHELL=sh

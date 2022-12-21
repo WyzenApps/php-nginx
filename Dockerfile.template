@@ -79,8 +79,6 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 9001
 
-HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost || exit 1
-
 VOLUME [ "$APPDIR", "/etc/nginx/conf.d", "/usr/local/etc/php/conf.d", "/etc/supervisor/conf.d" ]
 WORKDIR $APPDIR
 

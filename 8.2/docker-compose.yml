@@ -1,0 +1,23 @@
+###############################################################################
+#                          Generated on phpdocker.io                          #
+###############################################################################
+version: "3.8"
+services:
+  php-nginx-82-test:
+    container_name: php-nginx-82-test
+    image: wyzenrepo/php-nginx:8.2.12
+    working_dir: /application
+    volumes:
+      - ../public:/application/public
+    environment:
+      docker: "true"
+    expose:
+      - "80"
+    ports:
+      - 8081:80
+    # networks:
+    # - traefik_default
+    restart: always
+# networks:
+#   traefik_default:
+#     external: true

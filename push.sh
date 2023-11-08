@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then
-	echo "$0 <RELEASE_DIRNAME>"
+if [ $# -gt 2 ]; then
+	echo "$0 <RELEASE_DIRNAME> [TAG]"
 	exit 1
 fi
 
@@ -15,6 +15,9 @@ fi
 # Chargement de la conf
 . ${RELEASE_DIR}/config.docker
 
+FINAL_TAG=${2:-"$TAG"}
+echo $RELEASE_DIR : $TAG : $FINAL_TAG
+
 docker system info | grep -qE 'Username'
 if [ $? -eq 1 ]; then
 	echo "Connexion docker hub required"
@@ -26,4 +29,4 @@ if [ $? -eq 1 ]; then
 	fi
 fi
 
-docker push ${VENDOR}/${IMAGE}:${TAG}
+docker push ${VENDOR}/${IMAGE}:${FINAL_TAG}

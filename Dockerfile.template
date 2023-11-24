@@ -12,6 +12,7 @@ ENV LOCALE="fr_FR.UTF-8"
 ENV LC_ALL="fr_FR.UTF-8"
 
 COPY config/system/locale.gen /etc/locale.gen
+COPY config/system/timezone /etc/timezone
 COPY ./config/system/export_locale.sh /etc/profile.d/05-export_locale.sh
 COPY ./config/php/php.ini /usr/local/etc/php/php.ini
 

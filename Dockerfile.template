@@ -15,6 +15,7 @@ COPY config/system/locale.gen /etc/locale.gen
 COPY config/system/timezone /etc/timezone
 COPY ./config/system/export_locale.sh /etc/profile.d/05-export_locale.sh
 COPY ./config/php/php.ini /usr/local/etc/php/php.ini
+COPY ./certs /tools/certs
 
 RUN apt update && apt dist-upgrade -y && apt install -y curl wget git sudo locales vim unzip procps \
     libfreetype6-dev \
@@ -43,12 +44,18 @@ RUN cd /tmp && \
     php composer-setup.php --quiet && mv composer.phar /usr/local/bin/composer && rm composer-setup.php
 
 # PHP Packages
-RUN apt install -y zlib1g zlib1g-dev libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+RUN apt install -y \ 
+    zlib1g \
+    zlib1g-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
     libldap2-dev \
     libpq-dev \
     libicu-dev \
-    libzip-dev && \
-    docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    libzip-dev
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
     docker-php-ext-install -j$(nproc) \
     gd \
     calendar \

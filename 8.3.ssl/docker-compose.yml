@@ -1,0 +1,34 @@
+###############################################################################
+#                          Generated on phpdocker.io                          #
+###############################################################################
+version: "3.8"
+services:
+  php-nginx-83-test:
+    container_name: php-nginx-83-test
+    image: wyzenrepo/php-nginx:8.3.ssl
+    working_dir: /application
+    volumes:
+      - ../public:/application/public
+    environment:
+      docker: "true"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hp-nginx-83-test-http.rule=Host(`${APP_HOST}`)"
+      - "traefik.http.routers.hp-nginx-83-test-http.entrypoints=web"
+      - "traefik.http.routers.hp-nginx-83-test-http.middlewares=web-to-websecure@file"
+      - "traefik.http.routers.hp-nginx-83-test-https.rule=Host(`${APP_HOST}`)"
+      - "traefik.http.routers.hp-nginx-83-test-https.entrypoints=websecure"
+      - "traefik.http.routers.hp-nginx-83-test-https.middlewares=${HTTPS_MIDDLEWARES}"
+      - "traefik.http.routers.hp-nginx-83-test-https.tls=true"
+      - "traefik.http.routers.hp-nginx-83-test-https.tls.certresolver=${CERT_RESOLVER}"
+    expose:
+      - "443"
+    ports:
+      - 8081:80
+    networks:
+      - traefik_default
+    restart: always
+
+networks:
+  traefik_default:
+    external: true

@@ -1,0 +1,93 @@
+FROM #FROM_PHP#
+
+# Fix debconf warnings upon build
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TIMEZONE="Europe/Paris"
+ARG PHP_RELEASE=#PHP_RELEASE#
+ARG NGINX_RELEASE=mainline
+ARG APPDIR=/application
+ARG LOCALE="fr_FR.UTF-8"
+ARG LC_ALL="fr_FR.UTF-8"
+ENV LOCALE="fr_FR.UTF-8"
+ENV LC_ALL="fr_FR.UTF-8"
+
+COPY config/system/locale.gen /etc/locale.gen
+COPY config/system/timezone /etc/timezone
+COPY ./config/system/export_locale.sh /etc/profile.d/05-export_locale.sh
+COPY ./config/php/php.ini /usr/local/etc/php/php.ini
+COPY ./certs /tools/certs
+
+RUN apt update && apt dist-upgrade -y && apt install -y curl wget git sudo locales vim unzip procps \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev
+
+# NGINX
+RUN apt install -y curl gnupg2 ca-certificates lsb-release debian-archive-keyring && \
+    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null && \
+    echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/${NGINX_RELEASE}/debian `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list && \
+    echo "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx && \
+    apt update && apt install -y nginx supervisor
+
+RUN cd /tmp && \
+    groupadd -f --system --gid 33 www-data && \
+    mkdir -p $APPDIR && \
+    usermod -u 33 -g 33 -d $APPDIR www-data && \
+    chown www-data:www-data $APPDIR && \
+    locale-gen $LOCALE && update-locale LANGUAGE=${LOCALE} LC_ALL=${LOCALE} LANG=${LOCALE} LC_CTYPE=${LOCALE} && \
+    ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && \
+    . /etc/default/locale
+
+# COMPOSER
+RUN cd /tmp && \
+    curl -fsS https://getcomposer.org/installer -o composer-setup.php && \
+    php composer-setup.php --quiet && mv composer.phar /usr/local/bin/composer && rm composer-setup.php
+
+# PHP Packages
+RUN apt install -y \ 
+    zlib1g \
+    zlib1g-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    libldap2-dev \
+    libpq-dev \
+    libicu-dev \
+    libzip-dev
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install -j$(nproc) \
+    gd \
+    calendar \
+    ldap \
+    pgsql \
+    pdo_pgsql \
+    pdo_mysql \
+    intl \
+    zip
+
+# CLEAN
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+
+# ADDITIONALS CONFIG
+COPY ./config/nginx/conf.d/default.conf /etc/nginx/conf.d/
+COPY ./config/php/php-ini-overrides.ini /usr/local/etc/php/conf.d/05-overrides.ini
+COPY ./config/system/alias.sh /etc/profile.d/01-alias.sh
+COPY ./config/supervisord /etc/supervisord
+
+RUN cat /etc/profile.d/01-alias.sh >/etc/bash.bashrc
+
+COPY --chown=www-data:www-data ${APPDIR} /${APPDIR}
+
+EXPOSE 80
+EXPOSE 443
+EXPOSE 9001
+
+VOLUME [ "$APPDIR", "/etc/nginx/conf.d", "/usr/local/etc/php/conf.d", "/etc/supervisor/conf.d" ]
+WORKDIR $APPDIR
+
+# Initializing Redis server and Gunicorn server from supervisord
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord/supervisord.conf"]
+
+# USER www-data

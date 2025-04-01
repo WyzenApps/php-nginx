@@ -1,0 +1,24 @@
+###############################################################################
+#                          Generated on phpdocker.io                          #
+###############################################################################
+services:
+  php-nginx-84-test:
+    env_file:
+      - config.docker
+    container_name: php-nginx-84-test
+    image: wyzenrepo/php-nginx:8.4
+    working_dir: /application
+    volumes:
+      - ../public:/application/public
+    environment:
+      docker: "true"
+    expose:
+      - "80"
+    ports:
+      - 8081:80
+    # networks:
+    # - traefik_default
+    restart: always
+# networks:
+#   traefik_default:
+#     external: true
